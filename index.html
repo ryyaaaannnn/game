@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Surprise Mini Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #2fa270, #52bc90);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: min(540px, calc(100vw - 32px));
+      text-align: center;
+      background: rgba(0, 0, 0, 0.22);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      border-radius: 24px;
+      padding: 28px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: clamp(2rem, 3vw, 3rem);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    p {
+      line-height: 1.6;
+      margin: 16px 0 28px;
+    }
+
+    .game-board {
+      position: relative;
+      height: 360px;
+      border: 2px dashed rgba(255, 255, 255, 0.55);
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.1));
+    }
+
+    .target {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ff7dda, #db7fe5);
+      border: 4px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 30px rgba(235, 123, 220, 0.45);
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.14s ease;
+    }
+
+    .target:active {
+      transform: scale(0.92);
+      opacity: 0.85;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status div {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 14px 18px;
+      border-radius: 14px;
+      min-width: 130px;
+      font-weight: 600;
+    }
+
+    .surprise {
+      margin-top: 24px;
+      font-size: 1.1rem;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .surprise.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    button {
+      margin-top: 24px;
+      background: #e67de0;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 26px;
+      color: #111;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 18px 30px rgba(255, 155, 35, 0.2);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Happy Monthsary wubi!</h1>
+    <p>Since namimiss mo mag valorant, ginawan kita ng mini aim labs gamee hehehehe hope u enjooy!!
+    Alam ko naman na palaban ka kaya pahirap to ng pahirap! Gooodluuckk</p>
+
+    <div class="game-board" id="gameBoard">
+      <div class="target" id="target"></div>
+    </div>
+
+    <div class="status">
+      <div>Level: <span id="level">1</span> / 10</div>
+      <div>Hits: <span id="hits">0</span> / 10</div>
+      <div>Time left: <span id="time">10</span>s</div>
+    </div>
+
+    <div class="surprise" id="surpriseMessage">🎉 Congratulations! You found the secret message: "Keep building fun things!"</div>
+    <button id="resetButton">Play Again</button>
+  </div>
+
+  <script>
+    const target = document.getElementById('target');
+    const board = document.getElementById('gameBoard');
+    const levelText = document.getElementById('level');
+    const hitsText = document.getElementById('hits');
+    const timeText = document.getElementById('time');
+    const surprise = document.getElementById('surpriseMessage');
+    const resetButton = document.getElementById('resetButton');
+
+    const maxLevel = 10;
+    const baseTime = 12;
+    const minTime = 5;
+    const baseTargetSize = 70;
+    const minTargetSize = 30;
+    const levelMessages = [
+      'Wooow! Level 1 complete?! jk heheheheheh warm up lang yan! ok quik letter. I jut want to remind you that are my favorite person, my safest space, and my absolute favorite part of every single day. I love you.',
+      'Level 2 complete! congrats?! ok smol letter again!! Quik reminder that I am so thankful to have you, kahit gaano pa maging magulo ang mundo, malaman ko lang na nandiyan ka, and that is more than enough for me. I love you so much.',
+      'Level 3 complete! Never talaga ako nag duda sa mga kakayahan mo hehehe! At lalong hindi ko pag dudahan na kaya mong gawin lahat ng gusto mong gawin, basta nandiyan lang ako sa tabi mo, and I will support you in every way I can. I love you so much wubi.',
+      'Level 4 complete! Thank you for being yourself in every way possible, your smile never fails to brighten my day, and your presence is the best part of my life. I love you so much wubi.',
+      'Level 5 complete! Thank you for inspring me to become a better man, for being my rock, and for loving me unconditionally. I am so lucky to have you in my life. I love you wubi.',
+      'Level 6 complete! Just in case you forgot today: I am completely, wholeheartedly yours. Through every high and every low, my feelings for you will never fail. You are my choice every single day, and Im not going anywhere. I will always be here for you, no matter what. I love you wubi.',
+      'Level 7 complete! Whenever you feel overwhelmed or unsure, wubi just close eyes and remember how deeply you are loved by meee. My heart belongs to you completely. Thank you for bringing so much happiness and appreciationinto my life. I appreciate the way you care for me, and I promise to spend every day showing you that you are my number one priority I love you wubi.',
+      'Level 8 complete! wubi isnt just my girlfriend; you are my best friend, my kakampi, and my biggest inspiration. Thank you for trusting me with your heart and for loving me so purely. I promise to keep protecting what we have, to listen to wubi, to lift wubi up, and to make sure wubi always feel cherished. I love you wubi.',
+      'Level 9 complete! Looking at my future, I see my whole future with you. Thank you for your endless patience, wubi nonstop support, and the endless way wubi love me. wubi taught me what real partnership feels like, and Wubi super thankful for the bond wubis built. No distance, no stress, and nothing could ever change how desperately im in love with you. You have all of me, always wubi. I love you wubi.',
+      'wubi, thank you for being the most incredible blessing in my life. wubi is the only person I want to celebrate everything with and the only one I want to show my clingy side to behhehehe. Thank you for your beautiful cutesy heart, your cutesy smile, and the most purest happiness you bring into my world. I want to assure you, with absolute certainty, that my heart is permanently yours. I love you not just for who you are, but for who I am when  with you. No matter where life takes us, my commitment to you is absolute, and my love for you grows deeper with every single breath. You are my everything. I love you wubi.'
+    ];
+
+    let level = 1;
+    let hits = 0;
+    let timeLeft = baseTime;
+    let targetSize = baseTargetSize;
+    let timerId = null;
+    let gameActive = false;
+
+    function randomPosition() {
+      const padding = 16;
+      const boardRect = board.getBoundingClientRect();
+      const maxX = boardRect.width - targetSize - padding;
+      const maxY = boardRect.height - targetSize - padding;
+      const x = Math.random() * Math.max(maxX, 0) + padding / 2;
+      const y = Math.random() * Math.max(maxY, 0) + padding / 2;
+      target.style.left = `${x}px`;
+      target.style.top = `${y}px`;
+    }
+
+    function updateDisplay() {
+      levelText.textContent = level;
+      hitsText.textContent = hits;
+      timeText.textContent = timeLeft;
+    }
+
+    function showSurprise() {
+      surprise.classList.add('show');
+    }
+
+    function hideSurprise() {
+      surprise.classList.remove('show');
+    }
+
+    function setButtonText() {
+      if (!gameActive) {
+        if (hits >= 10 && level < maxLevel) {
+          resetButton.textContent = 'Next Level';
+        } else if (hits >= 10 && level === maxLevel) {
+          resetButton.textContent = 'Restart Game';
+        } else {
+          resetButton.textContent = 'Retry Level';
+        }
+      }
+    }
+
+    function endGame(success) {
+      gameActive = false;
+      clearInterval(timerId);
+      target.style.pointerEvents = 'none';
+      if (success) {
+        surprise.textContent = `🎉 ${levelMessages[level - 1]}`;
+      } else {
+        surprise.textContent = `Time is up on level ${level}! Try again to continue.`;
+      }
+      showSurprise();
+      setButtonText();
+    }
+
+    function startLevel() {
+      hits = 0;
+      timeLeft = Math.max(baseTime - (level - 1), minTime);
+      targetSize = Math.max(baseTargetSize - (level - 1) * 4, minTargetSize);
+      target.style.width = `${targetSize}px`;
+      target.style.height = `${targetSize}px`;
+      target.style.pointerEvents = 'auto';
+      hideSurprise();
+      updateDisplay();
+      randomPosition();
+      gameActive = true;
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        if (!gameActive) return;
+        timeLeft -= 1;
+        updateDisplay();
+        if (timeLeft <= 0) {
+          endGame(false);
+        }
+      }, 1000);
+    }
+
+    target.addEventListener('click', () => {
+      if (!gameActive) return;
+      hits += 1;
+      updateDisplay();
+      target.style.transform = 'scale(0.88)';
+      setTimeout(() => target.style.transform = '', 120);
+      if (hits >= 10) {
+        endGame(true);
+      } else {
+        randomPosition();
+      }
+    });
+
+    resetButton.addEventListener('click', () => {
+      if (gameActive) return;
+      if (hits >= 10 && level < maxLevel) {
+        level += 1;
+      } else if (hits >= 10 && level === maxLevel) {
+        level = 1;
+      }
+      startLevel();
+    });
+
+    window.addEventListener('resize', () => {
+      if (gameActive) randomPosition();
+    });
+
+    startLevel();
+  </script>
+</body>
+</html>
